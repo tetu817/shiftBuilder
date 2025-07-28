@@ -509,13 +509,14 @@ if 'shift' in st.session_state:
         pdf.add_page()
         pdf.set_font("Arial", size=6)
         columns = ['Data', 'Ono', 'Miyamura', 'Hirouchi', 'Ouen', 'Ninzuu']
+        key_map = {'Data': '日付', 'Ono': '小野', 'Miyamura': '宮村', 'Hirouchi': '廣内', 'Ouen': '応援', 'Ninzuu': '人数'}
         widths = [15, 8, 8, 8, 8, 8]
         for i, col in enumerate(columns):
             pdf.cell(widths[i], 5.5, col.encode('latin-1', 'ignore').decode('latin-1'), 1)
         pdf.ln()
         for index, row in df.iterrows():
             for i, col in enumerate(columns):
-                pdf.cell(widths[i], 5.5, str(row[col]).encode('latin-1', 'ignore').decode('latin-1'), 1)
+                pdf.cell(widths[i], 5.5, str(row[key_map[col]]).encode('latin-1', 'ignore').decode('latin-1'), 1)
             pdf.ln()
         pdf_bytes = pdf.output(dest='S')
         pdf_io = BytesIO(pdf_bytes.encode('latin-1'))

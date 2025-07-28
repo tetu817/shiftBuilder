@@ -1,0 +1,4 @@
+streamlit
+pulp
+pandas
+fpdf  # PDF出力が必要なら追加（オプション）

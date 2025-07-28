@@ -466,7 +466,7 @@ if 'shift' in st.session_state:
         hiro_s = shift[d]['hiro']
         oen_s = shift[d]['support']
         count = sum(1 for pp in persons if shift[d][pp] != '')
-        html += f"<tr><td>{date_str} ({weekday})</td><td style='background-color: #E0F7FA;'>{ono_s}</td><td style='background-color: #E8F5E9;'>{miya_s}</td><td style='background-color: #FFEBEE;'>{hiro_s}</td><td style='background-color: #FFF3E0;'>{oen_s}</td><td>{count}</td></tr>"
+        html += f"<tr><td>{date_str} ({weekday})</td><td>{ono_s}</td><td>{miya_s}</td><td>{hiro_s}</td><td>{oen_s}</td><td>{count}</td></tr>"
         shift_data.append({'日付 (曜日)': f"{date_str} ({weekday})", '小野': ono_s, '宮村': miya_s, '廣内': hiro_s, '応援': oen_s, '出勤人数': count})
     html += "</table>"
     st.markdown(html, unsafe_allow_html=True)

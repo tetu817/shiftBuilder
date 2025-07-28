@@ -53,7 +53,7 @@ hiro_rest = st.number_input("廣内休日数", min_value=0, max_value=31, value=
 # 1kin max individual
 ono_1kin_max = st.slider("小野1勤許容日数", 0, 3, value=0)
 miya_1kin_max = st.slider("宮村1勤許容日数", 0, 3, value=2)
-hiro_1kin_max = st.slider("廣内1勤許容日数", 0, 3, value=0)
+hiro_1kin_max = st.slider("廣内1勤許容日数", 0, 3, value=2)
 
 # Must off and cheer with multiselect
 ono_defaults = ["2025-08-31", "2025-09-15"]
@@ -71,6 +71,10 @@ hiro_must_off = ",".join(hiro_must_off_list)
 cheer_defaults = ["2025-08-16","2025-08-17","2025-08-23","2025-08-24","2025-09-05","2025-09-06","2025-09-07","2025-09-10","2025-09-13","2025-09-14"]
 cheer_list = st.multiselect("応援日", day_strs, default=[d for d in cheer_defaults if d in day_strs])
 cheer_days_str = ",".join(cheer_list)
+
+# Campaign Saturdays
+campaign_list = st.multiselect("キャンペーン土曜日", day_strs, default=[])
+campaign_days_str = ",".join(campaign_list)
 
 # 3 person priority days
 three_person_priority_list = st.multiselect("3人体制優先日", day_strs, default=[])
@@ -204,11 +208,13 @@ if st.button("シフト作成"):
         hiro_off = [datetime.strptime(d.strip(), '%Y-%m-%d') for d in hiro_must_off.split(',') if d.strip()]
 
         cheer_days = [datetime.strptime(d.strip(), '%Y-%m-%d') for d in cheer_days_str.split(',') if d.strip()]
+        campaign_days = [datetime.strptime(d.strip(), '%Y-%m-%d') for d in campaign_days_str.split(',') if d.strip()]
         holidays = [datetime.strptime(d.strip(), '%Y-%m-%d') for d in holidays_str.split(',') if d.strip()]
         three_person_priority = [datetime.strptime(d.strip(), '%Y-%m-%d') for d in three_person_priority_str.split(',') if d.strip()]
 
         is_special_late = [(days[i].weekday() == 6 or days[i] in holidays) for i in range(days_count)]
         cheer_indices = [days.index(d) for d in cheer_days if d in days]
+        campaign_indices = [days.index(d) for d in campaign_days if d in days]
         three_priority_indices = [days.index(d) for d in three_person_priority if d in days]
 
         persons = ['ono', 'miya', 'hiro', 'support']
@@ -409,6 +415,17 @@ if st.button("シフト作成"):
                     is_1kin_list.append(is_1kin)
             prob += lp.lpSum(is_1kin_list) <= onekin_max[p]
 
+        # Campaign Saturday constraints
+        is_two = {}
+        for d in campaign_indices:
+            is_two[d] = lp.LpVariable(f"is_two_{d}", cat='Binary')
+            prob += is_two[d] == 3 - workers[d]
+            prob += vars[d]['ono']['F'] >= is_two[d]
+            miya_work = lp.lpSum(vars[d]['miya'][s] for s in shifts['miya'] if s != 'off')
+            hiro_work = lp.lpSum(vars[d]['hiro'][s] for s in shifts['hiro'] if s != 'off')
+            prob += vars[d]['miya']['A'] >= miya_work - (1 - is_two[d])
+            prob += vars[d]['hiro']['A'] >= hiro_work - (1 - is_two[d])
+
         status = prob.solve(lp.PULP_CBC_CMD(msg=0, timeLimit=300))
 
         if status == lp.LpStatusOptimal:
@@ -449,7 +466,7 @@ if 'shift' in st.session_state:
         hiro_s = shift[d]['hiro']
         oen_s = shift[d]['support']
         count = sum(1 for pp in persons if shift[d][pp] != '')
-        html += f"<tr><td>{date_str} ({weekday})</td><td style='background-color: lightblue;'>{ono_s}</td><td style='background-color: lightgreen;'>{miya_s}</td><td style='background-color: lightcoral;'>{hiro_s}</td><td style='background-color: orange;'>{oen_s}</td><td>{count}</td></tr>"
+        html += f"<tr><td>{date_str} ({weekday})</td><td style='background-color: #E0F7FA;'>{ono_s}</td><td style='background-color: #E8F5E9;'>{miya_s}</td><td style='background-color: #FFEBEE;'>{hiro_s}</td><td style='background-color: #FFF3E0;'>{oen_s}</td><td>{count}</td></tr>"
         shift_data.append({'日付 (曜日)': f"{date_str} ({weekday})", '小野': ono_s, '宮村': miya_s, '廣内': hiro_s, '応援': oen_s, '出勤人数': count})
     html += "</table>"
     st.markdown(html, unsafe_allow_html=True)

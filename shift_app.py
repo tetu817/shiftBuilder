@@ -73,11 +73,13 @@ cheer_list = st.multiselect("応援日", day_strs, default=[d for d in cheer_def
 cheer_days_str = ",".join(cheer_list)
 
 # Campaign Saturdays
-campaign_list = st.multiselect("キャンペーン土曜日", day_strs, default=[])
+campaign_defaults = ["2025-08-16", "2025-08-23", "2025-09-06", "2025-09-13"]
+campaign_list = st.multiselect("キャンペーン土曜日", day_strs, default=[d for d in campaign_defaults if d in day_strs])
 campaign_days_str = ",".join(campaign_list)
 
 # 3 person priority days
-three_person_priority_list = st.multiselect("3人体制優先日", day_strs, default=[])
+three_person_priority_defaults = ["2025-08-16", "2025-08-17", "2025-08-23", "2025-08-24", "2025-09-06", "2025-09-07", "2025-09-13", "2025-09-14", "2025-09-15"]
+three_person_priority_list = st.multiselect("3人体制優先日", day_strs, default=[d for d in three_person_priority_defaults if d in day_strs])
 three_person_priority_str = ",".join(three_person_priority_list)
 
 early_min, early_max = st.slider("早番日数範囲", 0, 31, (8, 13))

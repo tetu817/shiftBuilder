@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 import pandas as pd
 from io import BytesIO
 from itertools import groupby
+import os
+import requests
 try:
     from fpdf import FPDF
 except ImportError:
@@ -507,17 +509,25 @@ if 'shift' in st.session_state:
     if 'FPDF' in globals():
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", size=6)
-        headers = ['日付', '小野', '宮村', '廣内', '応援', '人数']
-        for header in headers:
-            pdf.cell(5, 5.5, header.encode('latin-1', 'ignore').decode('latin-1'), 1)
+        font_path = 'DejaVuSansCondensed.ttf'
+        if not os.path.exists(font_path):
+            url = 'https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSansCondensed.ttf'
+            r = requests.get(url)
+            with open(font_path, 'wb') as f:
+                f.write(r.content)
+        pdf.add_font('DejaVu', '', font_path, uni=True)
+        pdf.set_font('DejaVu', size=6)
+        columns = ['日付', '小野', '宮村', '廣内', '応援', '人数']
+        widths = [15, 8, 8, 8, 8, 8]
+        for i, col in enumerate(columns):
+            pdf.cell(widths[i], 5.5, col, 1)
         pdf.ln()
         for index, row in df.iterrows():
-            for header in headers:
-                pdf.cell(5, 5.5, str(row[header]).encode('latin-1', 'ignore').decode('latin-1'), 1)
+            for i, col in enumerate(columns):
+                pdf.cell(widths[i], 5.5, str(row[col]), 1)
             pdf.ln()
-        pdf_bytes = pdf.output(dest='S')
-        pdf_io = BytesIO(pdf_bytes.encode('latin-1'))
+        pdf_bytes = pdf.output(dest='S').encode('latin-1')
+        pdf_io = BytesIO(pdf_bytes)
         st.download_button(
             label="PDFダウンロード",
             data=pdf_io,
@@ -553,16 +563,17 @@ if 'shift' in st.session_state:
     # Add stats to PDF
     if 'FPDF' in globals():
         pdf.ln(5)
-        pdf.set_font("Arial", size=6)
-        for col in stats_df.columns:
-            pdf.cell(5, 5.5, col.encode('latin-1', 'ignore').decode('latin-1'), 1)
+        pdf.set_font('DejaVu', size=6)
+        stats_widths = [15] + [8] * (len(stats_df.columns) - 1)
+        for i, col in enumerate(stats_df.columns):
+            pdf.cell(stats_widths[i % len(stats_widths)], 5.5, col, 1)
         pdf.ln()
         for index, row in stats_df.iterrows():
-            for col in stats_df.columns:
-                pdf.cell(5, 5.5, str(row[col]).encode('latin-1', 'ignore').decode('latin-1'), 1)
+            for i, col in enumerate(stats_df.columns):
+                pdf.cell(stats_widths[i % len(stats_widths)], 5.5, str(row[col]), 1)
             pdf.ln()
-        pdf_bytes = pdf.output(dest='S')
-        pdf_io = BytesIO(pdf_bytes.encode('latin-1'))
+        pdf_bytes = pdf.output(dest='S').encode('latin-1')
+        pdf_io = BytesIO(pdf_bytes)
         st.download_button(
             label="PDFダウンロード (シフト+統計)",
             data=pdf_io,

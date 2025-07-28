@@ -488,7 +488,7 @@ if 'shift' in st.session_state:
         oen_s = shift[d]['support']
         count = sum(1 for pp in persons if shift[d][pp] != '')
         html += f"<tr><td>{date_str} ({weekday})</td><td>{ono_s}</td><td>{miya_s}</td><td>{hiro_s}</td><td>{oen_s}</td><td>{count}</td></tr>"
-        shift_data.append({'日付 (曜日)': f"{date_str} ({weekday})", '小野': ono_s, '宮村': miya_s, '廣内': hiro_s, '応援': oen_s, '出勤人数': count})
+        shift_data.append({'日付': f"{date_str} ({weekday})", '小野': ono_s, '宮村': miya_s, '廣内': hiro_s, '応援': oen_s, '人数': count})
     html += "</table>"
     st.markdown(html, unsafe_allow_html=True)
 
@@ -508,12 +508,13 @@ if 'shift' in st.session_state:
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", size=6)
-        for col in df.columns:
-            pdf.cell(25, 5, col.encode('latin-1', 'ignore').decode('latin-1'), 1)
+        headers = ['日付', '小野', '宮村', '廣内', '応援', '人数']
+        for header in headers:
+            pdf.cell(5, 5.5, header.encode('latin-1', 'ignore').decode('latin-1'), 1)
         pdf.ln()
         for index, row in df.iterrows():
-            for col in df.columns:
-                pdf.cell(25, 5, str(row[col]).encode('latin-1', 'ignore').decode('latin-1'), 1)
+            for header in headers:
+                pdf.cell(5, 5.5, str(row[header]).encode('latin-1', 'ignore').decode('latin-1'), 1)
             pdf.ln()
         pdf_bytes = pdf.output(dest='S')
         pdf_io = BytesIO(pdf_bytes.encode('latin-1'))
@@ -554,11 +555,11 @@ if 'shift' in st.session_state:
         pdf.ln(5)
         pdf.set_font("Arial", size=6)
         for col in stats_df.columns:
-            pdf.cell(25, 5, col.encode('latin-1', 'ignore').decode('latin-1'), 1)
+            pdf.cell(5, 5.5, col.encode('latin-1', 'ignore').decode('latin-1'), 1)
         pdf.ln()
         for index, row in stats_df.iterrows():
             for col in stats_df.columns:
-                pdf.cell(25, 5, str(row[col]).encode('latin-1', 'ignore').decode('latin-1'), 1)
+                pdf.cell(5, 5.5, str(row[col]).encode('latin-1', 'ignore').decode('latin-1'), 1)
             pdf.ln()
         pdf_bytes = pdf.output(dest='S')
         pdf_io = BytesIO(pdf_bytes.encode('latin-1'))

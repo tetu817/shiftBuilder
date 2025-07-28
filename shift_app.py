@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 import pandas as pd
 from io import BytesIO
 from itertools import groupby
+import os
+import requests
 try:
     from fpdf import FPDF
 except ImportError:

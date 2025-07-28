@@ -509,7 +509,13 @@ if 'shift' in st.session_state:
     if 'FPDF' in globals():
         pdf = FPDF()
         pdf.add_page()
-        pdf.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
+        font_path = 'DejaVuSansCondensed.ttf'
+        if not os.path.exists(font_path):
+            url = 'https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSansCondensed.ttf'
+            r = requests.get(url)
+            with open(font_path, 'wb') as f:
+                f.write(r.content)
+        pdf.add_font('DejaVu', '', font_path, uni=True)
         pdf.set_font('DejaVu', size=6)
         columns = ['日付', '小野', '宮村', '廣内', '応援', '人数']
         widths = [15, 8, 8, 8, 8, 8]

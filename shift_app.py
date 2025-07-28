@@ -456,7 +456,26 @@ if 'shift' in st.session_state:
 
     st.subheader("シフト表")
     days_abbr = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    html = "<table><tr><th>日付 (曜日)</th><th>小野</th><th>宮村</th><th>廣内</th><th>応援</th><th>出勤人数</th></tr>"
+    html = """
+    <style>
+    table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th, td {
+      padding: 2px;
+      text-align: center;
+      border: 1px solid #ddd;
+      width: 16.67%;
+    }
+    tr {
+      height: 15px;
+    }
+    </style>
+    <table><tr><th>日付 (曜日)</th><th>小野</th><th>宮村</th><th>廣内</th><th>応援</th><th>出勤人数</th></tr>
+    """
     shift_data = []
     for d in range(days_count):
         date_str = days[d].strftime('%m/%d')

@@ -103,29 +103,30 @@ def extract_shift(vars, days_count, persons, shifts):
 
 def get_stats(shift, days_count, persons, prev_off, prev_early, prev_late):
     def get_streak_counts(work_arr):
+        # 統計時は前日連続を無視して期間内だけで計算
         four_consec_work = 0
         three_consec_rest = 0
-        current_work = 0
-        current_rest = 0
+        current_work = 0  # 前日を考慮せず0からスタート
+        current_rest = 0  # 同上
         for a in work_arr:
             if a == 1:
                 current_work += 1
-                if current_rest >=3:
-                    three_consec_rest +=1
+                if current_rest >= 3:
+                    three_consec_rest += 1
                 current_rest = 0
-                if current_work ==4:
-                    four_consec_work +=1
+                if current_work == 4:
+                    four_consec_work += 1
             else:
                 current_rest += 1
-                if current_work >=4:
-                    four_consec_work +=1
+                if current_work >= 4:
+                    four_consec_work += 1
                 current_work = 0
-                if current_rest ==3:
-                    three_consec_rest +=1
-        if current_work >=4:
-            four_consec_work +=1
-        if current_rest >=3:
-            three_consec_rest +=1
+                if current_rest == 3:
+                    three_consec_rest += 1
+        if current_work >= 4:
+            four_consec_work += 1
+        if current_rest >= 3:
+            three_consec_rest += 1
         return four_consec_work, three_consec_rest
 
     stats = {}
@@ -152,15 +153,20 @@ def get_stats(shift, days_count, persons, prev_off, prev_early, prev_late):
                     late += 1
                 elif s in ['C', 'D']:
                     mid += 1
+        # 期間内だけの最大連続
         max_consec_rest = max((len(list(g)) for k, g in groupby(work_arr) if k == 0), default=0)
         max_consec_duty = max((len(list(g)) for k, g in groupby(work_arr) if k == 1), default=0)
         four_consec_work, three_consec_rest = get_streak_counts(work_arr)
+        
+        # 1勤計算: 期間内だけで、開始日のprev_off無視、終了日のnext_is_offをFalse扱い（翌日考慮なし）
         for i in range(days_count):
             if work_arr[i] == 1:
-                prev_is_off = (i == 0 and prev_off[p]) or (i > 0 and work_arr[i-1] == 0)
-                next_is_off = (i == days_count - 1) or work_arr[i+1] == 0
+                prev_is_off = (i > 0 and work_arr[i-1] == 0)  # 開始日のprev_off無視
+                next_is_off = (i < days_count - 1 and work_arr[i+1] == 0)  # 終了日のnext_is_off無視
                 if prev_is_off and next_is_off:
-                    one_kin +=1
+                    one_kin += 1
+        
+        # 休み前/後: 期間内だけ（変更なし）
         for d in range(days_count):
             if shift[d][p] == '':
                 if d > 0 and shift[d-1][p] != '':
@@ -173,6 +179,7 @@ def get_stats(shift, days_count, persons, prev_off, prev_early, prev_late):
                         rest_after_late += 1
         before_rate = (rest_before_early / rest_before_count * 100 if rest_before_count > 0 else 0)
         after_rate = (rest_after_late / rest_after_count * 100 if rest_after_count > 0 else 0)
+        
         stats[p] = {
             '休日数': off_days,
             '最大連続休み': max_consec_rest,
@@ -387,23 +394,19 @@ if st.button("シフト作成"):
             # 1kin
             is_1kin_list = []
             if days_count > 1:
-                # Start
+                # Start: prev_off考慮（入力時のみ）
                 work = 1 - vars[0][p]['off']
                 off_next = vars[1][p]['off']
                 is_1kin = lp.LpVariable(f"is_1kin_{p}_0", cat='Binary')
                 prob += is_1kin <= work
                 prob += is_1kin <= off_next
-                prob += is_1kin <= prev_off[p]
-                prob += is_1kin >= work + off_next + prev_off[p] - 2
+                if prev_shift[p] != '':  # 前日入力時のみprev_off考慮
+                    prob += is_1kin <= prev_off[p]
+                    prob += is_1kin >= work + off_next + prev_off[p] - 2
+                else:  # 無入力時: prev_off考慮せず
+                    prob += is_1kin >= work + off_next - 1
                 is_1kin_list.append(is_1kin)
-                # End
-                work = 1 - vars[days_count-1][p]['off']
-                off_prev = vars[days_count-2][p]['off']
-                is_1kin = lp.LpVariable(f"is_1kin_{p}_{days_count-1}", cat='Binary')
-                prob += is_1kin <= work
-                prob += is_1kin <= off_prev
-                prob += is_1kin >= work + off_prev - 1
-                is_1kin_list.append(is_1kin)
+                
                 # Middle
                 for i in range(1, days_count - 1):
                     work = 1 - vars[i][p]['off']
@@ -415,6 +418,11 @@ if st.button("シフト作成"):
                     prob += is_1kin <= off_next
                     prob += is_1kin >= work + off_prev + off_next - 2
                     is_1kin_list.append(is_1kin)
+                
+                # End: 終了日の1kinを考慮せず（翌日無視、is_1kin=0固定）
+                # 終了日のis_1kinを追加せず、リストに含めない
+                # (つまり、終了日の1kinは制約対象外)
+
             prob += lp.lpSum(is_1kin_list) <= onekin_max[p]
 
         # Campaign Saturday constraints

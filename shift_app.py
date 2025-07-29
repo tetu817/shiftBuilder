@@ -114,15 +114,11 @@ def get_stats(shift, days_count, persons, prev_off, prev_early, prev_late):
                 if current_rest >= 3:
                     three_consec_rest += 1
                 current_rest = 0
-                if current_work == 4:
-                    four_consec_work += 1
             else:
                 current_rest += 1
                 if current_work >= 4:
                     four_consec_work += 1
                 current_work = 0
-                if current_rest == 3:
-                    three_consec_rest += 1
         if current_work >= 4:
             four_consec_work += 1
         if current_rest >= 3:
@@ -421,7 +417,6 @@ if st.button("シフト作成"):
                 
                 # End: 終了日の1kinを考慮せず（翌日無視、is_1kin=0固定）
                 # 終了日のis_1kinを追加せず、リストに含めない
-                # (つまり、終了日の1kinは制約対象外)
 
             prob += lp.lpSum(is_1kin_list) <= onekin_max[p]
 
@@ -475,7 +470,7 @@ if 'shift' in st.session_state:
       font-size: 12px;
     }
     th, td {
-      padding: 2px;
+      padding: 2px
       text-align: center;
       border: 1px solid #ddd;
       width: 16.67%;

@@ -532,6 +532,14 @@ if 'shift' in st.session_state:
     else:
         st.warning("PDF出力にはFPDFが必要です。")
 
+    stats = get_stats(shift, days_count, persons, prev_off, prev_early, prev_late)
+    st.subheader("統計チェック")
+    stats_data = []
+    for pp, s in stats.items():
+        st.write(f"{pp}:")
+        for k, v in s.items():
+            st.write(f"  {k}: {v}")
+        stats_data.append({'人': pp, **s})
     stats_df = pd.DataFrame(stats_data)
 
     # Stats table in HTML

@@ -535,14 +535,11 @@ if 'shift' in st.session_state:
     stats = get_stats(shift, days_count, persons, prev_off, prev_early, prev_late)
     st.subheader("統計チェック")
     stats_data = []
-    for pp, s in stats.items():
-        st.write(f"{pp}:")
-        for k, v in s.items():
-            st.write(f"  {k}: {v}")
-        stats_data.append({'人': pp, **s})
+    for p in ['ono', 'miya', 'hiro']:
+        stats_data.append({'人': p, **stats[p]})
     stats_df = pd.DataFrame(stats_data)
 
-    # Stats table in HTML
+    # Stats table in HTML (表のみ表示)
     stats_html = stats_df.to_html(index=False)
     st.markdown(stats_html, unsafe_allow_html=True)
 

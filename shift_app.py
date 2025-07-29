@@ -162,7 +162,7 @@ def get_stats(shift, days_count, persons, prev_off, prev_early, prev_late):
                 if prev_is_off and next_is_off:
                     one_kin += 1
         
-        # 休み前/後: 期間内だけ（変更なし）
+        # 休み前/後: 期間内だけ（小数点以下切り捨て）
         for d in range(days_count):
             if shift[d][p] == '':
                 if d > 0 and shift[d-1][p] != '':
@@ -173,8 +173,8 @@ def get_stats(shift, days_count, persons, prev_off, prev_early, prev_late):
                     rest_after_count += 1
                     if shift[d+1][p] in ['E', 'F']:
                         rest_after_late += 1
-        before_rate = (rest_before_early / rest_before_count * 100 if rest_before_count > 0 else 0)
-        after_rate = (rest_after_late / rest_after_count * 100 if rest_after_count > 0 else 0)
+        before_rate = int(rest_before_early / rest_before_count * 100) if rest_before_count > 0 else 0
+        after_rate = int(rest_after_late / rest_after_count * 100) if rest_after_count > 0 else 0
         
         stats[p] = {
             '休日数': off_days,
@@ -470,7 +470,7 @@ if 'shift' in st.session_state:
       font-size: 12px;
     }
     th, td {
-      padding: 2px
+      padding: 2px;
       text-align: center;
       border: 1px solid #ddd;
       width: 16.67%;
@@ -579,9 +579,6 @@ if 'shift' in st.session_state:
 
     st.subheader("全体")
     st.write(f"応援候補日数: {len(cheer_indices)} (必須10)")
-    min_count = min(sum(1 for pp in persons if shift[d][pp] != '') for d in range(days_count))
-    memo = "応援なしでも全日2人以上確保可能" if min_count >= 2 else ""
-    st.write(f"柔軟性メモ: {memo}")
 
     st.subheader("違反チェック")
     st.write("絶対ルール違反なし (小野の連続早番制限を緩和して実現). 柔軟ルール: see stats for rates and max consecutive.")
